@@ -1,0 +1,318 @@
+#include<fstream>
+#include<iostream>
+#include<stdio.h>
+#include<string.h>
+using namespace std;
+float billtotal(int id);
+class menu
+{
+private:
+    int id;
+    char itemname[50];
+    int price;
+    friend void search_item();
+    friend void remove_item();
+    friend void update_item();
+    friend void raisebill();
+public:
+    void accept()
+    {
+        cout<<endl<<"Enter Id";
+        cin>>id;
+        cout<<endl<<"Enter Item name";
+        cin>>itemname;
+        cout<<endl<<"Enter Price";
+        cin>>price;
+    }
+    void display()
+    {
+        cout<<endl<<id<<"\t\t"<<itemname<<"\t\t"<<price;
+    }
+};
+class bill
+{
+private:
+    int billid;
+    char date[12];
+    int icode;
+    char itemname[50];
+    float price;
+    int qty;
+    float totalprice;
+    friend void raisebill();
+    friend float billtotal(int id);
+    friend void daily_report();
+public:
+    void start()
+    {
+        cout<<endl<<"Enter Serial Number";
+        cin>>billid;
+        cout<<endl<<"Enter Date dd/mm/yyyy";
+        cin>>date;
+    }
+
+};
+void raisebill()
+{
+    bill obj;
+    obj.start();
+    while(1)
+    {
+        int code,q;
+        cout<<endl<<"Enter itemcode";
+        cin>>code;
+        cout<<endl<<"Enter Quantity";
+        cin>>q;
+        fstream rd;
+        rd.open("d:\\mymenu2.txt",ios::in);
+        rd.seekg(0,ios::end);
+        int size=rd.tellg();
+        int count=size/sizeof(obj);
+        rd.seekg(0,ios::beg);
+        menu obj2;
+        for(int i=1;i<=count;i++)
+        {
+            rd.read((char *)&obj2,sizeof(obj2));
+            if(obj2.id==code)
+            {
+                obj.icode=code;
+                strcpy(obj.itemname,obj2.itemname);
+                obj.price=obj2.price;
+                obj.totalprice=obj2.price*q;
+                break;
+            }
+        }
+        fstream wr;
+        wr.open("d:\\mybills.txt",ios::app);
+        wr.write((char *)&obj,sizeof(obj));
+        wr.close();
+        cout<<endl<<"Press 0 to exit any other key to continue";
+        int choice;
+        cin>>choice;
+        if(choice==0)
+        {
+            break;
+        }
+
+    }
+    fstream rd2;
+    rd2.open("d://mybills.txt",ios::in);
+    cout<<endl<<endl<<endl<<"************************************";
+    cout<<endl<<"\t\t\t"<<"Welcome to My Restaurant";
+    cout<<endl<<"************************************************";
+    cout<<endl<<"Bill Serial Number "<<obj.billid<<"\t\t"<<"Dated: "<<obj.date;
+
+    rd2.seekg(0,ios::end);
+    int  t=rd2.tellg()/sizeof(obj);
+    rd2.seekg(0,ios::beg);
+    bill obj3;
+    cout<<endl<<"******************************************************";
+    for(int i=1;i<=t;i++)
+    {
+        rd2.read((char *)&obj3,sizeof(obj3));
+        if(obj3.billid==obj.billid)
+        {
+            cout<<endl<<obj3.icode<<"\t"<<obj3.itemname<<"\t"<<obj3.price<<"\t"<<obj3.qty<<"\t"<<obj3.totalprice;
+
+        }
+    }
+    cout<<endl<<"*******************************************************";
+    cout<<endl<<"\t\t\t Total Bill"<<billtotal(obj.billid);
+    cout<<endl<<"\t\t\t GST 5%    "<<billtotal(obj.billid)*5/100.0;
+    cout<<endl<<"\t\t\t Amt Payable"<<billtotal(obj.billid)+billtotal(obj.billid)*5/100.0;
+}
+
+
+
+
+
+
+
+void add_menu()
+{
+    fstream wr;
+    wr.open("d:\\mymenu2.txt",ios::app);
+    menu obj;
+    obj.accept();
+    wr.write((char *)&obj,sizeof(obj));
+    wr.close();
+}
+void showmenu()
+{
+    fstream rd;
+    menu obj;
+    rd.open("d:\\mymenu2.txt",ios::in);
+    rd.seekg(0,ios::end); // takes cursor to end
+    int size=rd.tellg();
+    int count=size/sizeof(obj);
+    rd.seekg(0,ios::beg);
+    for(int i=1;i<=count;i++)
+    {
+    rd.read((char *)&obj,sizeof(obj));
+    obj.display();
+    }
+}
+void search_item()
+{
+    fstream rd;
+    menu obj;
+    rd.open("d:\\mymenu2.txt",ios::in);
+    rd.seekg(0,ios::end); // takes cursor to end
+    int size=rd.tellg();
+    int count=size/sizeof(obj);
+    int icode;
+    cout<<endl<<"Enter Item Code";
+    cin>>icode;
+    rd.seekg(0,ios::beg);
+    for(int i=1;i<=count;i++)
+    {
+    rd.read((char *)&obj,sizeof(obj));
+    if(obj.id==icode)
+    {
+    obj.display();
+    }
+
+    }
+}
+void remove_item()
+{
+    fstream rd,wr;
+    menu obj;
+    rd.open("d:\\mymenu2.txt",ios::in);
+    wr.open("d:\\temp2.txt",ios::out);
+    rd.seekg(0,ios::end); // takes cursor to end
+    int size=rd.tellg();
+    int count=size/sizeof(obj);
+    int icode;
+    cout<<endl<<"Enter Item Code";
+    cin>>icode;
+    rd.seekg(0,ios::beg);
+    for(int i=1;i<=count;i++)
+    {
+    rd.read((char *)&obj,sizeof(obj));
+    if(obj.id==icode)
+    {
+    cout<<endl<<"Item removed";
+    }
+    else
+    {
+        wr.write((char *)&obj,sizeof(obj));
+    }
+    }
+    rd.close();
+    wr.close();
+    remove("d:\\mymenu2.txt");
+   if(rename("d:\\temp2.txt","d:\\mymenu2.txt")==1)
+   {
+       cout<<"Rename Failed";
+   }
+}
+
+void update_item()
+{
+    fstream rd,wr;
+    menu obj;
+    rd.open("d:\\mymenu2.txt",ios::in);
+    wr.open("d:\\temp2.txt",ios::out);
+    rd.seekg(0,ios::end); // takes cursor to end
+    int size=rd.tellg();
+    int count=size/sizeof(obj);
+    int icode;
+    cout<<endl<<"Enter Item Code";
+    cin>>icode;
+    rd.seekg(0,ios::beg);
+    for(int i=1;i<=count;i++)
+    {
+    rd.read((char *)&obj,sizeof(obj));
+    if(obj.id==icode)
+    {
+    obj.accept();
+    wr.write((char *)&obj,sizeof(obj));
+    }
+    else
+    {
+        wr.write((char *)&obj,sizeof(obj));
+    }
+    }
+    rd.close();
+    wr.close();
+    remove("d:\\mymenu2.txt");
+   if(rename("d:\\temp2.txt","d:\\mymenu2.txt")==1)
+   {
+       cout<<"Rename Failed";
+   }
+}
+
+
+float billtotal(int id)
+{
+    fstream rd("d:\\mybills.txt",ios::in);
+    rd.seekg(0,ios::end);
+    int count=rd.tellg()/sizeof(bill);
+    rd.seekg(0,ios::beg);
+    bill obj;
+    float amount=0;
+    for(int i=1;i<=count;i++)
+    {
+        rd.read((char *)&obj,sizeof(obj));
+        if(obj.billid==id)
+        {
+            amount=amount+obj.totalprice;
+        }
+    }
+    return amount;
+
+}
+
+void daily_report()
+{
+    float totalcollection=0;
+    int prints[50];
+    char today[12];
+    cout<<endl<<"Enter today Date";
+    cin>>today;
+    fstream rd("d:\\mybills.txt",ios::in);
+    rd.seekg(0,ios::end);
+    int count=rd.tellg()/sizeof(bill);
+    rd.seekg(0,ios::beg);
+    bill obj;
+    int counter=0;
+    cout<<endl<<"*************************************";
+    cout<<endl<<"Sr No\t\tTOtal\tGST\Payable";
+    cout<<endl<<"*************************************";
+    for(int i=1;i<=count;i++)
+    {
+        rd.read((char *)&obj,sizeof(obj));
+        int f=0;
+        for(int j=0;j<=49;j++)
+        {
+            if(prints[j]==obj.billid)
+            {
+                f=1;
+                break;
+            }
+        }
+        if(f==0)
+        {
+        if(strcmp(obj.date,today)==0)
+        {
+            float total=billtotal(obj.billid);
+            float gst=total*5/100.0;
+            float amt=total+gst;
+            totalcollection=totalcollection+amt;
+            cout<<endl<<obj.billid<<"\t\t"<<total<<"\t"<<gst<<"\t"<<amt;
+            prints[counter]=obj.billid;
+        }
+    }
+    }
+    cout<<endl<<"****************************************";
+    cout<<endl<<"Total Collection of Today"<<totalcollection;
+    cout<<endl<<"****************************************";
+}
+
+
+int main()
+{
+    daily_report();
+}
+
